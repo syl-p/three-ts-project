@@ -1,5 +1,7 @@
+import GUI from 'lil-gui';
 import * as THREE from 'three'
 import Experience from "../Experience";
+import Debug from '../Utils/Debug';
 import Resources from './Resources';
 
 export default class Environment {
@@ -7,6 +9,9 @@ export default class Environment {
   scene: THREE.Scene
   light!: THREE.DirectionalLight
   resources: Resources
+  debug: Debug
+  debugFolder!: GUI;
+
   environmentMap: {
     updateMaterial?: () => void,
     intensity: number,
@@ -22,6 +27,10 @@ export default class Environment {
     this.experience = experience
     this.scene = this.experience.scene
     this.resources = this.experience.resources
+    this.debug = this.experience.debug
+    if (this.debug.active) {
+      this.debugFolder = this.debug.ui.addFolder('Environment')
+    }
     
     this.setLight()
     this.setEnvironmentMap()
@@ -36,6 +45,33 @@ export default class Environment {
     this.light.position.set(3.5, 2, - 1.25)
 
     this.scene.add(this.light)
+
+    // Set debug
+    if (this.debug.active) {
+      this.debugFolder.add(this.light, 'intensity')
+        .min(0)
+        .max(10)
+        .name('light intensity')
+        .step(0.001)
+
+      this.debugFolder.add(this.light.position, 'x')
+        .min(-5)
+        .max(5)
+        .name('light x')
+        .step(0.001)
+      
+      this.debugFolder.add(this.light.position, 'y')
+        .min(-5)
+        .max(5)
+        .name('light y')
+        .step(0.001)
+
+      this.debugFolder.add(this.light.position, 'z')
+        .min(-5)
+        .max(5)
+        .name('light z')
+        .step(0.001)
+    }
   }
 
   setEnvironmentMap() {
@@ -55,6 +91,16 @@ export default class Environment {
     }
 
     this.environmentMap.updateMaterial()
+
+    // Set debug
+    if (this.debug.active) {
+      this.debugFolder.add(this.environmentMap, 'intensity')
+        .min(0)
+        .max(4)
+        .step(0.001)
+        .name('Environment intensity')
+        .onChange(this.environmentMap.updateMaterial)
+    }
   }
 }
 

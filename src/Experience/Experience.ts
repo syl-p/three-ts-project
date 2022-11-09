@@ -6,6 +6,7 @@ import Time from "./Utils/Time";
 import Resources from './World/Resources';
 import World from './World/World';
 import sources from './sources'
+import Debug from './Utils/Debug';
 
 export default class Experience {
   canvas: HTMLElement
@@ -16,11 +17,13 @@ export default class Experience {
   renderer: Renderer
   world: World
   resources: Resources
+  debug: Debug;
 
   constructor(canvas: HTMLElement) {
     // @ts-ignore
     window.experience = this // Global access
     this.canvas = canvas
+    this.debug = new Debug()
     this.sizes = new Sizes()
     this.time = new Time()
 
@@ -48,5 +51,31 @@ export default class Experience {
     this.camera.update()
     this.renderer.update()
     this.world.update()
+  }
+
+  destroy() {
+    this.sizes.off('resize')
+    this.time.off('tick')
+
+
+    // Traverse the scene
+    this.scene.traverse((child) => {
+      if(child instanceof THREE.Mesh) {
+        child.geometry.dispose()
+        for(const key in child.material) {
+          const value = child.material[key]
+          // Test if there is a dispose function
+          if(value && typeof value.dispose === 'function')
+          {
+              value.dispose()
+          }
+        }
+      }
+    })
+
+    this.camera.controls.dispose()
+    this.renderer.instance.dispose()
+    if(this.debug.active)
+      this.debug.ui.destroy()
   }
 }
